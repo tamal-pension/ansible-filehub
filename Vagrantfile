@@ -10,7 +10,7 @@ TOPIC_NAME = "pre_playbook_errors"
 ACCOUNT_ID = "339712742264"
 AWS_REGION = "eu-west-1"
 MAIN_SH_ARGS = <<MARKER
--e "playbook_name=ansible-filehub discord_message_owner_name=#{Etc.getpwuid(Process.uid).name}"
+-e "playbook_name=ansible-filehub discord_message_owner_name=#{Etc.getpwuid(Process.uid).name}" --tags "installation,configuration"
 MARKER
 Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL  
@@ -45,10 +45,12 @@ Vagrant.configure("2") do |config|
     override.vm.synced_folder common_collection_path, '/vagrant/collections/ansible_collections/inqwise/common', type: :rsync, rsync__exclude: '.git/', disabled: false
     
     aws.region = AWS_REGION
-    aws.security_groups = ["sg-077f8d7d58d420467", "sg-08624b68e9f025b6b4"]
+    aws.security_groups = ["sg-077f8d7d58d420467", "sg-08624b68e9f025b6b"]
     # public-ssh, filehub
-    aws.ami = "ami-0fa86d752d8b7d1ff"
+    aws.ami = "ami-0ad71aff41c394ba8"
+    aws.instance_type = "t4g.medium"
     aws.subnet_id = "subnet-0331d92e81f166c9f"
+    #aws.subnet_id = "subnet-087496369cb5e71f4"
     aws.associate_public_ip = true
     aws.iam_instance_profile_name = "bootstrap-role"
     aws.tags = {

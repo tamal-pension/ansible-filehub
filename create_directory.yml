@@ -1,0 +1,24 @@
+---
+- name: Create folder "{{ ftp_base_path }}/{{ item.path }}"
+  block:
+
+    - name: Create main directory
+      ansible.builtin.file:
+        path: "{{ ftp_base_path }}/{{ item.path }}"
+        state: directory
+        owner: "{{ item.user }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode | default('0770') }}"
+
+    - name: Create subdirectories inside the main folder (if defined)
+      ansible.builtin.file:
+        path: "{{ ftp_base_path }}/{{ item.path }}/{{ subfolder }}"
+        state: directory
+        owner: "{{ item.user }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode | default('2770') }}"
+      loop: "{{ item.subfolders | default([]) }}"
+      loop_control:
+        loop_var: subfolder
+      when: item.subfolders is defined and item.subfolders | length > 0
+  tags: configuration

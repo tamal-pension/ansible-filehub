@@ -1,0 +1,5 @@
+---
+
+roles:
+  - name: vsftpd
+    src: weareinteractive.vsftpd

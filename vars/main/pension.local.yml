@@ -1,2 +1,2 @@
 environment_name: pension-prod
-private_domain: pension.local
+internal_base_url: https://internal-pension.s3.amazonaws.com

@@ -1,0 +1,67 @@
+---
+- name: Load users and folders config from URL
+  block:
+    - name: Check if the FTP configuration file exists at the URL
+      ansible.builtin.uri:
+        url: "{{ ftp_config_url }}"
+        method: HEAD
+        return_content: no
+        status_code: 200
+      register: ftp_config_check
+      failed_when: ftp_config_check.status != 200
+      ignore_errors: yes  # Ignore errors only for existence check
+
+    - name: Skip if FTP configuration file does not exist
+      ansible.builtin.debug:
+        msg: "FTP configuration file does not exist, skipping the rest of the tasks."
+      when: ftp_config_check.status is not defined or ftp_config_check.status != 200
+
+    - name: Download the FTP configuration file
+      ansible.builtin.get_url:
+        url: "{{ ftp_config_url }}"
+        dest: "/tmp/ftp_config.yml"
+        mode: '0640'
+        force: no
+        validate_certs: yes
+        headers:
+          Accept: "application/x-yaml"
+      when: ftp_config_check.status == 200
+
+    - name: Include the YAML file into variables
+      ansible.builtin.include_vars:
+        file: "/tmp/ftp_config.yml"
+        name: ftp_config_vars
+      when: ftp_config_check.status == 200
+
+    - name: Set local variables for FTP users, groups, and folders
+      ansible.builtin.set_fact:
+        ftp_users_groups: "{{ ftp_config_vars.ftp_users_groups }}"
+        ftp_users: "{{ ftp_config_vars.ftp_users }}"
+        ftp_folders: "{{ ftp_config_vars.ftp_folders }}"
+      when: ftp_config_vars is defined
+
+    - name: Delete the temporary FTP configuration file
+      ansible.builtin.file:
+        path: "/tmp/ftp_config.yml"
+        state: absent
+      when: ftp_config_check.status == 200
+
+    # Optional Debugging (Print variables if defined)
+    - name: Print FTP users groups
+      ansible.builtin.debug:
+        var: ftp_users_groups
+      when: ftp_users_groups is defined
+      tags: debug
+
+    - name: Print FTP users
+      ansible.builtin.debug:
+        var: ftp_users
+      when: ftp_users is defined
+      tags: debug
+
+    - name: Print FTP folders
+      ansible.builtin.debug:
+        var: ftp_folders
+      when: ftp_folders is defined
+      tags: debug
+  tags: configuration

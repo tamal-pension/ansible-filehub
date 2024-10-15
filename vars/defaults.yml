@@ -2,24 +2,48 @@
 discord_webhook: https://discord.com/api/webhooks/{{ discord_message_webhook_id }}/{{ discord_message_webhook_token }}
 discord_channel: "#notifications"
 private_dns: filehub
+private_domain: pension-stg.local
 consul_cluster_tag_value: v1
 private_ip: "{{ ansible_default_ipv4.address }}"
 aws_iam_role: "filehub-role"
+loki_base_url: "http://loki.{{ private_domain }}:3100"
 app_user: "filehub"
 app_group: "{{ app_user }}"
 users_groups:
   - name: "{{ app_group }}"
 users:
   - name: "{{ app_user }}"
-    group: "{{ app_group }}"
+    groups: 
+      - "{{ app_group }}"
+
+ftp_users_groups:
+  - name: pension
+
+ftp_users:
+  - name: pension
+    password: "$6$0Wrl5Ff3PF9VmD08$OORnznDGQT/afAdSDBnAqqR0.TfgLxZCqiCW.FVIkL2eVUfu76HXvkNCX6AKwQgvXA0WoXj6UC8aFk4N.adIM/"
+    groups: 
+      - pension
+    shell: /usr/sbin/nologin
+    home: /data/pension/.home
+
+ftp_folders:
+  - path: "pension"
+    user: pension
+    group: pension
+    mode: '0750'
+
 disk:
     name: /dev/sdb
     mount_options: defaults,noatime
     mount: /data
-    type: standard
-    size: 10 
-    fstype: xfs
-    data_folder: lib
+    #type: standard
+    size: 10
+    fstype: ext4
     user: "{{ app_user }}"
     group: "{{ app_group }}"
     kms_key_id: "{{ disk_kms_key_id }}"
+    app: filehub-data
+    delete_on_termination: true
+
+ftp_base_path: "{{ disk.mount }}"

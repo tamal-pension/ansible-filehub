@@ -10,6 +10,95 @@
       value: "{{ private_ip }}"
       private: true
       ttl: 60
+    
+    skip_extend_os_family: true
+
     tags_facts:
       private_dns: "private_dns"
+
+- name: Load config with users and folders
+  ansible.builtin.include_tasks: load_ftp_config.yml
+  tags: configuration
+  vars:
+    ftp_config_url: "{{ internal_base_url }}/filehub/users_folders.yml"
+
+- name: Create ftp users
+  ansible.builtin.include_role:
+    name: users
+    apply:
+      tags: 
+        - installation
+        - configuration
+  vars:
+    users_groups: "{{ ftp_users_groups }}"
+    users: "{{ ftp_users }}"
+  tags: 
+    - always
+
+- name: Create directories with specified attributes
+  ansible.builtin.include_tasks: create_directory.yml
+  loop: "{{ ftp_folders }}"
+  loop_control:
+    loop_var: item
+  when: ftp_folders is defined
+  tags: configuration
+
+- name: Install vsftpd
+  ansible.builtin.include_role:
+    name: vsftpd
+    apply:
+      tags: installation
+  vars:
+    vsftpd_enable_ssl: false
+    vsftpd_config:
+      local_umask: 002
+      anonymous_enable: NO
+      local_enable: YES
+      write_enable: YES
+  tags: installation
+
+- name: Install Alloy
+  include_role:
+    name: alloy
+  tags: always
+  vars:
+    alloy_user_groups:
+      - systemd-journal
+    env_file_vars:
+      CUSTOM_ARGS: "--server.http.listen-addr=0.0.0.0:12345 --disable-reporting=true --stability.level=public-preview"
+    config: |
+      loki.write "local" {
+        endpoint {
+          url = "{{ loki_base_url }}/loki/api/v1/push"
+        }
+      }
+
+      loki.relabel "journal" {
+        forward_to = []
+
+        rule {
+          source_labels = ["__journal__systemd_unit"]
+          regex         = "(vsftpd.service|telegraf.service)"
+          action        = "keep"
+        }
+        rule {
+          source_labels = ["__journal__systemd_unit"]
+          target_label  = "unit"
+        }
+        rule {
+          source_labels = ["__journal__hostname"]
+          target_label  = "instance"
+        }
+      }
+
+      loki.source.journal "read" {
+        forward_to = [
+          loki.write.local.receiver,
+        ]
+        relabel_rules = loki.relabel.journal.rules
+        labels = {
+          "job" = "integrations/node_exporter",
+          "app" = "filehub",
+        }
+      }
   
