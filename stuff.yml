@@ -10,6 +10,11 @@
       value: "{{ private_ip }}"
       private: true
       ttl: 60
+    - name: "{{ private_dns }}.{{ public_domain }}"
+      zone: "{{ public_domain }}"
+      type: A
+      value: "{{ ec2_instance.public_ip }}"
+      ttl: 120
     
     skip_extend_os_family: true
 
