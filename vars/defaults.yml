@@ -37,7 +37,7 @@ disk:
     name: /dev/sdb
     mount_options: defaults,noatime
     mount: /data
-    #type: standard
+    type: standard
     size: 10
     fstype: ext4
     user: "{{ app_user }}"
