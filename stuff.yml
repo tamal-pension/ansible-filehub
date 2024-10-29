@@ -65,7 +65,10 @@
       local_enable: YES
       write_enable: YES
       pasv_addr_resolve: YES
-      pasv_address: "{{ vsftpd_pasv_address ? default(private_dns + '.' + private_domain) }}"
+      pasv_address: "{{ ec2_instance.public_ip | default(private_ip) }}"
+      pasv_min_port: 50000
+      pasv_max_port: 50250
+
   tags: installation
 
 - name: Install Alloy
