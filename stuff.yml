@@ -20,6 +20,10 @@
 
     tags_facts:
       private_dns: "private_dns"
+      private_domain: "private_domain"
+      public_domain: "public_domain"
+      vsftpd_pasv_address: "vsftpd_pasv_address"
+
 
 - name: Load config with users and folders
   ansible.builtin.include_tasks: load_ftp_config.yml
@@ -60,6 +64,8 @@
       anonymous_enable: NO
       local_enable: YES
       write_enable: YES
+      pasv_addr_resolve: YES
+      pasv_address: "{{ vsftpd_pasv_address ? default(private_dns + '.' + private_domain) }}"
   tags: installation
 
 - name: Install Alloy
