@@ -55,8 +55,6 @@
 - name: Install vsftpd
   ansible.builtin.include_role:
     name: vsftpd
-    apply:
-      tags: installation
   vars:
     vsftpd_enable_ssl: false
     vsftpd_config:
@@ -69,7 +67,11 @@
       pasv_min_port: 50000
       pasv_max_port: 50250
 
-  tags: installation
+  tags:
+    - "{{ 'install' if 'installation' in ansible_run_tags else '' }}"
+    - "{{ 'config' if 'configuration' in ansible_run_tags else '' }}"
+    - "{{ 'manage' if 'configuration' in ansible_run_tags else '' }}"
+    - "{{ 'service' if 'configuration' in ansible_run_tags else '' }}"
 
 - name: Install Alloy
   include_role:
