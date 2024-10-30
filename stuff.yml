@@ -56,6 +56,7 @@
   package:
     name: vsftpd
     state: present
+  tags: installation
 
 - name: Configure vsftpd
   ansible.builtin.include_role:
