@@ -1,4 +1,4 @@
-environment_name: pension-prod
+environment_name: pension
 private_domain: pension.local
 public_domain: pension.tamal.co.il
 internal_base_url: https://internal-pension.s3.amazonaws.com
